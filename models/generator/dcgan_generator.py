@@ -12,18 +12,6 @@ class View2D(nn.Module):
         return x.view(x.size(0), -1, *self.size)
 
 @GENERATOR.register_module
-class UniformNoisyGenerator(nn.Module):
-    def __init__(self, batch=1, shape=(100,), bandwidth=1.0):
-        super(UniformNoisyGenerator, self).__init__()
-        self.batch = batch
-        self.shape = shape
-        self.bandwidth = bandwidth
-    
-    def forward(self, placeholder=None):
-        device=self.device if hasattr(self, 'device') else None
-        return torch.rand((self.batch,) + self.shape, device=device)*self.bandwidth
-
-@GENERATOR.register_module
 class DCGenerator(nn.Sequential):
     def __init__(self, input_size=100, start_size=(4, 4), start_channel=1024, output_channel=3, levels=4):
         super(DCGenerator, self).__init__()

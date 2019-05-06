@@ -34,9 +34,12 @@ class Libray:
         for _dict in self._dicts:
             if name in _dict._module_dict:
                 return _dict[name]
-        return None
+
+    def __getitem__(self, name):
+        return self.__getattr__(name)
 
 GENERATOR = Registry('generator')
 DISCRIMINATOR = Registry('discriminator')
 LOSS = Registry('loss')
-LIBRARY = Libray((GENERATOR, DISCRIMINATOR, LOSS))
+FACTORY = Registry('factory')
+LIBRARY = Libray((GENERATOR, DISCRIMINATOR, LOSS, FACTORY))
