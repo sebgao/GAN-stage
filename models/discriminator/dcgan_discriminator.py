@@ -21,3 +21,7 @@ class DCDiscriminator(nn.Sequential):
         
         if sigmoid:
             self.add_module('sigmoid', nn.Sigmoid())
+
+    def forward(self, x):
+        x = super(DCDiscriminator, self).forward(x)
+        return x.view(x.size(0))

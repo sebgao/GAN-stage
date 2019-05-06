@@ -41,5 +41,6 @@ class Libray:
 GENERATOR = Registry('generator')
 DISCRIMINATOR = Registry('discriminator')
 LOSS = Registry('loss')
+MISC = Registry('misc')
 FACTORY = Registry('factory')
-LIBRARY = Libray((GENERATOR, DISCRIMINATOR, LOSS, FACTORY))
+LIBRARY = Libray((GENERATOR, DISCRIMINATOR, LOSS, MISC, FACTORY))
