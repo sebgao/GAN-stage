@@ -78,13 +78,15 @@ class DCGAN(TwoStageGAN):
         self.g_optimizer.step()
         self.discriminator.zero_grad()
 
-        assert False
+        return info
 
     def start_train(self):
         loader = self.dataset.loader(self.batch_size)
         for idx, (data, _) in enumerate(loader):
             self.train()
-            self.train_data(data)
+            info = self.train_data(data)
+            print(info)
+            assert False
 
     def forward(self):
         return self.generator(self.noise())
