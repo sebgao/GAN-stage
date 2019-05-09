@@ -13,8 +13,6 @@ class TwoStageGAN(nn.Module):
     def __init__(self):
         super(TwoStageGAN, self).__init__()
     
-    def train(self):
-        pass
 
 @FACTORY.register_module
 class DCGAN(TwoStageGAN):
@@ -33,29 +31,37 @@ class DCGAN(TwoStageGAN):
 
     
     def config(self, dataset, batch_size, optimizer=None):
+        device = next(self.parameters()).device
+
         self.dataset = instantiate(dataset)
         self.batch_size = batch_size
+
+        self.device = device
         self.noise.batch = batch_size
+        self.noise.device = device
 
         optimizer = partial(torch.optim.Adam, lr=0.0002, betas=(0.5, 0.999), weight_decay=5*1e-4) if optimizer is None else optimizer
         self.g_optimizer = instantiate(optimizer, params=self.generator.parameters())
         self.d_optimizer = instantiate(optimizer, params=self.discriminator.parameters())
 
     def train_data(self, data):
-        device = self.device if hasattr(self, 'device') else None
+        device = self.device
+
         data = data.to(device)
         batch_size = self.batch_size
 
-        info = {}
+        info = dict()
 
+        label = torch.full((batch_size, ), REAL_LABEL, device=device)
+        
         # Step 1: training the discriminator
 
         # Step 1.1: using true samples
-        label = torch.full((batch_size, ), REAL_LABEL, device=device)
+        label.fill_(REAL_LABEL)
         output = self.discriminator(data)
         error = self.loss(output, label)
         error.backward()
-        info['error_d_real'] = error.mean().item()
+        info['loss_d_real'] = error.mean().item()
 
         # Step 1.2: using fake samples
         label.fill_(FAKE_LABEL)
@@ -63,7 +69,7 @@ class DCGAN(TwoStageGAN):
         output = self.discriminator(fake.detach())
         error = self.loss(output, label)
         error.backward()
-        info['error_d_fake'] = error.mean().item()
+        info['loss_d_fake'] = error.mean().item()
 
         self.d_optimizer.step()
 
@@ -73,7 +79,7 @@ class DCGAN(TwoStageGAN):
         output = self.discriminator(fake)
         error = self.loss(output, label)
         error.backward()
-        info['error_g'] = error.mean().item()
+        info['loss_g'] = error.mean().item()
 
         self.g_optimizer.step()
         self.discriminator.zero_grad()
@@ -82,11 +88,16 @@ class DCGAN(TwoStageGAN):
 
     def start_train(self):
         loader = self.dataset.loader(self.batch_size)
+        len_loader = len(loader)
+        losses = []
         for idx, (data, _) in enumerate(loader):
             self.train()
             info = self.train_data(data)
-            print(info)
-            assert False
+            loss = sum([info[key] for key in info if key.startswith('loss')])
+            losses.append(loss)
+
+        print(sum(losses)/len(losses))
+
 
     def forward(self):
         return self.generator(self.noise())
